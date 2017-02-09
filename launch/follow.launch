@@ -1,0 +1,5 @@
+<launch>
+	<node pkg="max_robot" type="follow" name="follow" output="screen">
+		<remap from="cmd_vel" to="cmd_vel_mux/follow_controller"/>
+	</node>
+</launch>

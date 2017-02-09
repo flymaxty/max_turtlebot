@@ -1,0 +1,35 @@
+<launch>
+	<arg name="joy" default="false"/>
+	<arg name="r_port" default="/dev/serial/by-id/usb-Yujin_Robot_iClebo_Kobuki_kobuki_AH02B8PB-if00-port0"/>
+	<arg name="rplidar_port" default="/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0
+"/>
+	<arg name="robot_port" default="/dev/serial/by-id/usb-Yujin_Robot_iClebo_Kobuki_kobuki_AH02B8PB-if00-port0"/>
+
+	<node name="rplidarNode" pkg="rplidar_ros" type="rplidarNode" output="screen">
+		<param name="serial_port"       type="string"  value="$(arg rplidar_port)"/>  
+		<param name="serial_baudrate"   type="int"     value="115200"/>
+		<param name="frame_id"          type="string"  value="laser_link"/>
+		<param name="inverted"          type="bool"    value="false"/>
+		<param name="angle_compensate"  type="bool"    value="true"/>
+		<remap from="scan" to="base_scan" />
+	</node>
+
+	<node pkg="laser_filters" type="scan_to_scan_filter_chain" name="laser_filter">
+		<rosparam command="load" file="$(find max_robot)/param/laser_filter.yaml" />
+		<remap from="scan" to="base_scan" />
+		<remap from="scan_filtered" to="scan"/>
+	</node>
+
+	<node pkg="gmapping" type="slam_gmapping" name="robot_gmapping" output="screen">
+		<rosparam file="$(find max_robot)/param/robot_gmapping.yaml" command="load"/>
+		<param name="base_frame" value="base_footprint"/>
+		<param name="odom_frame" value="odom"/> 
+	</node>
+
+	<include file="$(find max_robot)/launch/robot_base.launch">
+		<arg name="robot_port" default="$(arg r_port)"/>
+		<arg name="joy" default="$(arg joy)"/>
+	</include>
+
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find max_robot)/rviz/gmapping.rviz"/>
+</launch>

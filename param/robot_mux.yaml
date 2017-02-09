@@ -1,0 +1,17 @@
+subscribers:
+  - name:        "Safe reactive controller"
+    topic:       "safety_controller"
+    timeout:     0.2
+    priority:    10
+  - name:        "Joystick controller"
+    topic:       "joystick_teleop"
+    timeout:     0.2
+    priority:    7
+  - name:        "Move_base controller"
+    topic:       "move_base_controller"
+    timeout:     0.2
+    priority:    6
+  - name:        "Follow controller"
+    topic:       "follow_controller"
+    timeout:     0.2
+    priority:    6

@@ -1,0 +1,46 @@
+<launch>
+	<arg name="joy" default="false"/>
+	<arg name="robot_port" default="/dev/serial/by-id/usb-Yujin_Robot_iClebo_Kobuki_kobuki_AH02B8PB-if00-port0"/>
+	<arg name="rplidar_port" default="/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0
+"/>
+	<node name="map_server" pkg="map_server" type="map_server" args="$(find max_robot)/maps/$(arg map)"/>
+	
+	<node name="rplidarNode" pkg="rplidar_ros" type="rplidarNode" output="screen">
+		<param name="serial_port"       type="string"  value="$(arg rplidar_port)"/>  
+		<param name="serial_baudrate"   type="int"     value="115200"/>
+		<param name="frame_id"          type="string"  value="laser_link"/>
+		<param name="inverted"          type="bool"    value="false"/>
+		<param name="angle_compensate"  type="bool"    value="true"/>
+		<remap from="scan" to="base_scan" />
+	</node>
+
+	<node pkg="laser_filters" type="scan_to_scan_filter_chain" name="laser_filter">
+		<rosparam command="load" file="$(find max_robot)/param/laser_filter.yaml" />
+		<remap from="scan" to="base_scan" />
+		<remap from="scan_filtered" to="scan"/>
+	</node>
+
+	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+		<rosparam file="$(find max_robot)/param/move_base/costmap_common_params.yaml" command="load" ns="global_costmap" />
+		<rosparam file="$(find max_robot)/param/move_base/costmap_common_params.yaml" command="load" ns="local_costmap" />   
+		<rosparam file="$(find max_robot)/param/move_base/local_costmap_params.yaml" command="load" />   
+		<rosparam file="$(find max_robot)/param/move_base/global_costmap_params.yaml" command="load" />
+		<rosparam file="$(find max_robot)/param/move_base/dwa_local_planner_params.yaml" command="load" />
+		<rosparam file="$(find max_robot)/param/move_base/move_base_params.yaml" command="load" />
+		<rosparam file="$(find max_robot)/param/move_base/global_planner_params.yaml" command="load" />
+		<rosparam file="$(find max_robot)/param/move_base/navfn_global_planner_params.yaml" command="load" />
+
+		<remap from="cmd_vel" to="cmd_vel_mux/move_base_controller"/>
+	</node>
+
+	<node pkg="amcl" type="amcl" name="amcl">
+		<rosparam file="$(find max_robot)/param/amcl.yaml" command="load"/>
+	</node>
+
+	<include file="$(find max_robot)/launch/robot_base.launch">
+	<arg name="robot_port" default="$(arg robot_port)"/>
+	<arg name="joy" default="$(arg joy)"/>
+	</include>
+
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find max_robot)/rviz/nav.rviz"/>
+</launch>

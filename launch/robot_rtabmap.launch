@@ -1,0 +1,34 @@
+<launch>
+	<arg name="joy" default="false"/>
+	<arg name="r_port" default="/dev/kobuki"/>
+
+	<include file="$(find max_robot)/launch/robot_base.launch">
+		<arg name="robot_port" default="$(arg r_port)"/>
+		<arg name="joy" default="$(arg joy)"/>
+	</include>
+
+	<include file="$(find freenect_launch)/launch/freenect.launch">
+		<arg name="depth_registration" default="true"/>
+	</include>
+
+	<group ns="rtabmap">
+		<node name="rtabmap" pkg="rtabmap_ros" type="rtabmap" output="screen" args="--delete_db_on_start">
+			<param name="frame_id" type="string" value="camera_link"/>
+			<param name="subscribe_depth" type="bool" value="true"/>
+			<!--remap from="odom" to="/base_controller/odom"/-->
+			<remap from="rgb/image" to="/camera/rgb/image_rect_color"/>
+			<remap from="depth/image" to="/camera/depth_registered/image_raw"/>
+			<remap from="rgb/camera_info" to="/camera/rgb/camera_info"/>
+			<param name="queue_size" type="int" value="10"/>
+
+			<!-- RTAB-Map's parameters -->
+			<param name="RGBD/AngularUpdate" type="string" value="0.01"/>
+			<param name="RGBD/LinearUpdate" type="string" value="0.01"/>
+			<param name="Rtabmap/TimeThr" type="string" value="700"/>
+			<param name="Mem/RehearsalSimilarity" type="string" value="0.45"/>
+			<param name="RGBD/OptimizeFromGraphEnd" type="string" value="true"/>
+		</node>
+	</group>
+
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find max_robot)/rviz/gmapping.rviz"/>
+</launch>
